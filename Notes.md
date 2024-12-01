@@ -21,13 +21,21 @@ Adresse réseau du postgres : `some-postgres`
 https://certbot.eff.org/instructions?ws=other&os=pip
 
 
+## Utiliser des ports < 1024
+
+# Si vous utilisez cargo run (développement)
+cargo build
+sudo setcap 'cap_net_bind_service=+ep' target/debug/sosplanning
+
+# Si vous utilisez la version release
+cargo build --release
+sudo setcap 'cap_net_bind_service=+ep' target/release/sosplanning
+
+
+
 
 TODO:
-- [X] Mettre en place le dynDNS
-- [ ] Tester l'application en production en http
-    - [ ] Mettre à jour les url sur le client Google
-- [ ] Mettre en place le HTTPS
-    - [ ] Remettre le Secure dans les cookies
+- Régler le problème du crypto provider
 
 ```rust
 let client = CoreClient::from_provider_metadata(

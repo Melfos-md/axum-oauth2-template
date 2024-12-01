@@ -23,15 +23,69 @@ Before using this template, ensure you have the following:
    - Configure the Authorized JavaScript origins (example: `http://localhost:3000`)
 
 4. **Environment Variables**
-   Create a `.env` file in the project root with:
+   En développement, créez un fichier `.env` dans la racine du projet :
    ```env
    DATABASE_URL=postgresql://user:password@localhost/your_database_name
    GOOGLE_CLIENT_ID=your_client_id
    GOOGLE_CLIENT_SECRET=your_client_secret
-   REDIRECT_URL=http://localhost:3000/api/auth/callback/google
+   ```
+   
+   En production, les variables d'environnement doivent être passées directement lors du lancement de l'application :
+   ```bash
+   DATABASE_URL=postgresql://user:password@localhost/your_database_name \
+   GOOGLE_CLIENT_ID=your_client_id \
+   GOOGLE_CLIENT_SECRET=your_client_secret \
+   ./your_application
    ```
 
-5. **Development Tools**
+5. **Fichiers de Configuration**
+   L'application utilise des fichiers de configuration TOML selon l'environnement.
+   
+   Pour le développement, créez un fichier `config.dev.toml` :
+   ```toml
+   [server]
+   host = "127.0.0.1"
+   port = 3000
+
+   [ssl]
+   enabled = false
+
+   [database]
+   url = "postgresql://user:password@localhost/your_database_name" # will be replaced by .env
+
+   [google]
+   client_id = "your_client_id" # will be replaced by .env
+   client_secret = "your_client_secret" # will be replaced by .env
+   redirect_url = "http://your_redirect_url"
+   auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+   token_url = "https://oauth2.googleapis.com/token"
+   ```
+   
+   Pour la production, créez un fichier `config.prod.toml` :
+   ```toml
+   [server]
+   host = "0.0.0.0"
+   port = 443
+
+   [ssl]
+   enabled = true
+   cert_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/fullchain.pem"
+   key_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/privkey.pem"
+
+   [database]
+   url = "postgresql://user:password@localhost/your_database_name" # will be replaced by env variable
+
+   [google]
+   client_id = "your_client_id" # will be replaced by env variable
+   client_secret = "your_client_secret" # will be replaced by env variable
+   redirect_url = "http://your_redirect_url"
+   auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+   token_url = "https://oauth2.googleapis.com/token"
+   ```
+   
+   Ces fichiers doivent être ajoutés au `.gitignore` pour éviter d'exposer des informations sensibles.
+
+6. **Development Tools**
    ```bash
    # For development with auto-reload
    cargo install cargo-watch

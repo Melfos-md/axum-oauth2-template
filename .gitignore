@@ -2,3 +2,5 @@
 .env
 Cargo.lock
 .cursorignore
+config.dev.toml
+config.prod.toml

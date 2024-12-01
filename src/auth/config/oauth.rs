@@ -1,22 +1,19 @@
-use std::env;
-
-use config::Config;
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 
-use crate::error::AppError;
+use crate::{error::AppError, settings::AppConfig};
 
-pub fn oauth_client(config: &Config) -> Result<BasicClient, AppError> {
-    let client_id = env::var("GOOGLE_CLIENT_ID")?;
-    let client_secret = env::var("GOOGLE_CLIENT_SECRET")?;
-    let redirect_url = config.get::<String>("redirect_uri")?;
+pub fn oauth_client(config: &AppConfig) -> Result<BasicClient, AppError> {
+    let client_id = config.google.client_id.clone();
+    let client_secret = config.google.client_secret.clone();
+    let redirect_url = config.google.redirect_url.clone();
+    let auth_url = config.google.auth_url.clone();
+    let token_url = config.google.token_url.clone();
 
     Ok(BasicClient::new(
         ClientId::new(client_id),
         Some(ClientSecret::new(client_secret)),
-        AuthUrl::new("https://accounts.google.com/o/oauth2/v2/auth".to_string())?,
-        Some(TokenUrl::new(
-            "https://oauth2.googleapis.com/token".to_string(),
-        )?),
+        AuthUrl::new(auth_url)?,
+        Some(TokenUrl::new(token_url)?),
     )
     .set_redirect_uri(RedirectUrl::new(redirect_url)?))
 }
