@@ -22,7 +22,11 @@ mod state;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
+    let mut addr = "0.0.0.0:80";
+    if std::env::var("PRODUCTION").unwrap_or("false".to_string()) == "false" {
+        dotenvy::dotenv().ok();
+        addr = "127.0.0.1:80";
+    }
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -78,7 +82,7 @@ async fn main() {
         .with_state(app_state);
 
     // run it
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let listener = tokio::net::TcpListener::bind(addr)
         .await
         .unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());

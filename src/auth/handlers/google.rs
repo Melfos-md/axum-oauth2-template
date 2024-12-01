@@ -45,7 +45,8 @@ pub async fn google_auth(
         .await?
         .ok_or_else(|| anyhow::anyhow!("Failed to retrieve cookie value"))?;
 
-    let cookie = format!("{COOKIE_NAME}={cookie_value}; SameSite=Lax; HttpOnly; Secure; Path=/");
+    //let cookie = format!("{COOKIE_NAME}={cookie_value}; SameSite=Lax; HttpOnly; Secure; Path=/");
+    let cookie = format!("{COOKIE_NAME}={cookie_value}; SameSite=Lax; HttpOnly; Path=/");
     let mut headers = HeaderMap::new();
     headers.insert(SET_COOKIE, cookie.parse()?);
 
