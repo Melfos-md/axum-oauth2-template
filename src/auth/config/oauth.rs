@@ -1,14 +1,14 @@
 use std::env;
 
-use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret,RedirectUrl, TokenUrl};
+use config::Config;
+use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
 
 use crate::error::AppError;
 
-pub fn oauth_client() -> Result<BasicClient, AppError> {
+pub fn oauth_client(config: &Config) -> Result<BasicClient, AppError> {
     let client_id = env::var("GOOGLE_CLIENT_ID")?;
     let client_secret = env::var("GOOGLE_CLIENT_SECRET")?;
-    let redirect_url = env::var("REDIRECT_URL")
-        .unwrap_or_else(|_| "http://localhost:3000/api/auth/callback/google".to_string());
+    let redirect_url = config.get::<String>("redirect_uri")?;
 
     Ok(BasicClient::new(
         ClientId::new(client_id),

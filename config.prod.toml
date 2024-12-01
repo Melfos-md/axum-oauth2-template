@@ -1,0 +1,4 @@
+url = "0.0.0.0:443"
+redirect_uri = "https://sosplanning.r-mont.fr/api/auth/callback/google"
+certfile = "/etc/letsencrypt/live/sosplanning.r-mont.fr/fullchain.pem"
+keyfile = "/etc/letsencrypt/live/sosplanning.r-mont.fr/privkey.pem"

@@ -23,3 +23,5 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "chrono"] }
 async-session = "3.0.0"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 dotenvy = "0.15.7"
+config = "0.14.0"
+axum-server = { version = "0.7.1", features = ["tls-rustls"] }

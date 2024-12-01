@@ -15,9 +15,10 @@ Adresse réseau du postgres : `some-postgres`
 
 `cargo build --release`
 `mv ./target/release/sosplanning-final ./opt/sosplanning`
-`DATABASE_URL=postgresql://postgres:mon_mot_de_passe@some-postgres:5432/sosplanning GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET REDIRECT_URI=URL ./sosplanning-final`
+`RUST_ENV=prod DATABASE_URL=postgresql://postgres:mon_mot_de_passe@some-postgres:5432/sosplanning GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET ./sosplanning-final`
 
 
+https://certbot.eff.org/instructions?ws=other&os=pip
 
 
 
@@ -26,6 +27,7 @@ TODO:
 - [ ] Tester l'application en production en http
     - [ ] Mettre à jour les url sur le client Google
 - [ ] Mettre en place le HTTPS
+    - [ ] Remettre le Secure dans les cookies
 
 ```rust
 let client = CoreClient::from_provider_metadata(

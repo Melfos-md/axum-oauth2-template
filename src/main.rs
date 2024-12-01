@@ -1,6 +1,6 @@
 use async_sqlx_session::PostgresSessionStore;
 use auth::{
-    config::oauth::oauth_client,
+    config::{oauth::oauth_client, Environment},
     handlers::{
         google::{google_auth, google_callback},
         session::logout,
@@ -8,11 +8,13 @@ use auth::{
     models::user::User,
 };
 use axum::{extract::State, middleware, response::IntoResponse, routing::get, Router};
+use axum_server::tls_rustls::RustlsConfig;
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
+use config::{Config, File};
 use state::AppState;
 
-use std::{env, time::Duration};
+use std::{env, net::SocketAddr, path::PathBuf, time::Duration};
 use tokio_postgres::NoTls;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -22,11 +24,24 @@ mod state;
 
 #[tokio::main]
 async fn main() {
-    let mut addr = "0.0.0.0:80";
-    if std::env::var("PRODUCTION").unwrap_or("false".to_string()) == "false" {
+    let environment = match std::env::var("RUST_ENV")
+        .unwrap_or("dev".to_string())
+        .as_str()
+    {
+        "prod" => Environment::Production,
+        _ => Environment::Development,
+    };
+    let config = Config::builder()
+        .add_source(File::with_name(&format!("config.{}.toml", environment)))
+        .build()
+        .unwrap();
+
+    let addr: SocketAddr = config.get::<String>("url").unwrap().parse().unwrap();
+
+    if environment == Environment::Development {
         dotenvy::dotenv().ok();
-        addr = "127.0.0.1:80";
     }
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -35,20 +50,16 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let manager = PostgresConnectionManager::new_from_stringlike(
-        "host=localhost user=postgres password=example port=5432 dbname=dermoscopy-quiz",
-        NoTls,
-    )
-    .unwrap();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = PostgresConnectionManager::new_from_stringlike(&database_url, NoTls).unwrap();
     let db_pool: Pool<PostgresConnectionManager<NoTls>> = Pool::builder()
         .connection_timeout(Duration::from_secs(5))
         .build(manager)
         .await
         .unwrap();
 
-    let oauth_client = oauth_client().unwrap();
+    let oauth_client = oauth_client(&config).unwrap();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let session_store = PostgresSessionStore::new(&database_url)
         .await
         .expect("Failed to create session store");
@@ -81,12 +92,25 @@ async fn main() {
         .merge(protected_routes)
         .with_state(app_state);
 
-    // run it
-    let listener = tokio::net::TcpListener::bind(addr)
+    if environment == Environment::Production {
+        let cert_config = RustlsConfig::from_pem_file(
+            PathBuf::from(config.get::<String>("certfile").unwrap()),
+            PathBuf::from(config.get::<String>("keyfile").unwrap()),
+        )
         .await
         .unwrap();
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+        tracing::debug!("listening on https://{}", addr);
+        axum_server::bind_rustls(addr, cert_config)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    } else {
+        tracing::debug!("listening on http://{}", addr);
+        axum_server::bind(addr)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    }
 }
 
 async fn index(State(_app_state): State<AppState>, user: Option<User>) -> impl IntoResponse {

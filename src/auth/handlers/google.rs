@@ -17,7 +17,8 @@ use axum::{
 use axum_extra::{headers, TypedHeader};
 use chrono::{Duration as ChronoDuration, Utc};
 use oauth2::{
-    basic::BasicClient, reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse
+    basic::BasicClient, reqwest::async_http_client, AuthorizationCode, CsrfToken,
+    PkceCodeChallenge, PkceCodeVerifier, Scope, TokenResponse,
 };
 use tracing;
 
@@ -26,7 +27,7 @@ pub async fn google_auth(
     State(session_store): State<PostgresSessionStore>,
 ) -> Result<impl IntoResponse, AppError> {
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-    
+
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new("email".to_string()))
@@ -60,7 +61,7 @@ async fn validate_csrf_token(
 ) -> Result<Session, AppError> {
     let cookie = cookies
         .get(COOKIE_NAME)
-        .expect("Session cookie not found")
+        .ok_or_else(|| anyhow::anyhow!("Session cookie not found"))?
         .to_string();
 
     let session = session_store
@@ -119,7 +120,7 @@ pub async fn google_callback(
         tracing::error!("JSON parsing error: {:?}", e);
         anyhow::anyhow!("JSON parsing failed: {}", e)
     })?;
-    
+
     session_store.destroy_session(session).await?;
     let mut session = Session::new();
     let user = User {
