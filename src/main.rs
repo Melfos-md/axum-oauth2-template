@@ -24,6 +24,8 @@ mod state;
 
 #[tokio::main]
 async fn main() {
+    rustls::crypto::ring::default_provider().install_default().expect("Failed to install rustls crypto provider");
+
     let environment = match std::env::var("RUST_ENV")
         .unwrap_or("dev".to_string())
         .as_str()
@@ -50,6 +52,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    tracing::info!("Attempting to connect to database");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = PostgresConnectionManager::new_from_stringlike(&database_url, NoTls).unwrap();
     let db_pool: Pool<PostgresConnectionManager<NoTls>> = Pool::builder()

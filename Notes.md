@@ -4,7 +4,7 @@
 Création du docker postgres
 `docker network create mon_reseau`
 `docker volume create mon_volume_postgres`
-`docker run --name some-postgres --network mon_reseau -v mon_volume_postgres:/var/lib/postgresql/data -e POSTGRES_PASSWORD=mon_mot_de_passe -d postgres`
+`docker run --name some-postgres --network mon_reseau -p 5432:5432 -v mon_volume_postgres:/var/lib/postgresql/data -e POSTGRES_PASSWORD=mon_mot_de_passe -d postgres`
 
 Création du docker adminer : 
 `docker run --name mon_adminer --network mon_reseau -p 8080:8080 adminerdocker run --name mon_adminer --network mon_reseau -p 8080:8080 adminer`
