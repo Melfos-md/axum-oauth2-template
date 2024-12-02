@@ -27,12 +27,20 @@ mod state;
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| format!("{}=trace", env!("CARGO_CRATE_NAME")).into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let provider = ring::default_provider();
     provider
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    let environment = match std::env::var("RUST_ENV")
+    let environment = match std::env::var("APP_ENV")
         .unwrap_or("dev".to_string())
         .as_str()
     {
@@ -42,13 +50,18 @@ async fn main() {
 
     let config = Config::builder()
         .add_source(File::with_name(&format!("config.{}.toml", environment)))
-        .add_source(config::Environment::default())
+        .add_source(config::Environment::with_prefix("APP"))
         .build()
         .expect("Failed to build config");
 
     let app_config: AppConfig = config
         .try_deserialize()
         .expect("Failed to deserialize config");
+
+    tracing::debug!("google id: {}", app_config.google_client_id);
+    tracing::debug!("google secret: {}", app_config.google_client_secret);
+    tracing::debug!("database url: {}", app_config.database_url);
+
     let addr = SocketAddr::new(
         app_config
             .server
@@ -62,16 +75,8 @@ async fn main() {
         dotenvy::dotenv().ok();
     }
 
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| format!("{}=trace", env!("CARGO_CRATE_NAME")).into()),
-        )
-        .with(tracing_subscriber::fmt::layer())
-        .init();
-
     tracing::info!("Attempting to connect to database");
-    let database_url = app_config.database.url.clone();
+    let database_url = app_config.database_url.clone();
     let manager = PostgresConnectionManager::new_from_stringlike(&database_url, NoTls)
         .expect("Failed to create database manager");
     let db_pool: Pool<PostgresConnectionManager<NoTls>> = Pool::builder()
@@ -121,12 +126,14 @@ async fn main() {
         let cert_config = RustlsConfig::from_pem_file(cert_path, key_path)
             .await
             .expect("Failed to load TLS certificate files");
+        tracing::debug!("Starting server in production mode");
         tracing::debug!("listening on https://{}", addr);
         axum_server::bind_rustls(addr, cert_config)
             .serve(app.into_make_service())
             .await
             .expect("Failed to start server");
     } else {
+        tracing::debug!("Starting server in development mode");
         tracing::debug!("listening on http://{}", addr);
         axum_server::bind(addr)
             .serve(app.into_make_service())

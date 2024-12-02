@@ -23,25 +23,26 @@ Before using this template, ensure you have the following:
    - Configure the Authorized JavaScript origins (example: `http://localhost:3000`)
 
 4. **Environment Variables**
-   En développement, créez un fichier `.env` dans la racine du projet :
+  In development, create a `.env` file in the project root :
    ```env
-   DATABASE_URL=postgresql://user:password@localhost/your_database_name
-   GOOGLE_CLIENT_ID=your_client_id
-   GOOGLE_CLIENT_SECRET=your_client_secret
+   APP_DATABASE_URL=postgresql://user:password@localhost/your_database_name
+   APP_GOOGLE_CLIENT_ID=your_client_id
+   APP_GOOGLE_CLIENT_SECRET=your_client_secret
    ```
    
-   En production, les variables d'environnement doivent être passées directement lors du lancement de l'application :
+   In production, the environment variables must be passed directly when launching the application :
    ```bash
-   DATABASE_URL=postgresql://user:password@localhost/your_database_name \
-   GOOGLE_CLIENT_ID=your_client_id \
-   GOOGLE_CLIENT_SECRET=your_client_secret \
+   APP_ENV=prod \
+   APP_DATABASE_URL=postgresql://user:password@localhost/your_database_name \
+   APP_GOOGLE_CLIENT_ID=your_client_id \
+   APP_GOOGLE_CLIENT_SECRET=your_client_secret \
    ./your_application
    ```
 
-5. **Fichiers de Configuration**
-   L'application utilise des fichiers de configuration TOML selon l'environnement.
+5. **Configuration Files**
+   The application uses TOML configuration files according to the environment.
    
-   Pour le développement, créez un fichier `config.dev.toml` :
+   For development, create a `config.dev.toml` file :
    ```toml
    [server]
    host = "127.0.0.1"
@@ -50,18 +51,13 @@ Before using this template, ensure you have the following:
    [ssl]
    enabled = false
 
-   [database]
-   url = "postgresql://user:password@localhost/your_database_name" # will be replaced by .env
-
    [google]
-   client_id = "your_client_id" # will be replaced by .env
-   client_secret = "your_client_secret" # will be replaced by .env
    redirect_url = "http://your_redirect_url"
    auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
    token_url = "https://oauth2.googleapis.com/token"
    ```
    
-   Pour la production, créez un fichier `config.prod.toml` :
+   For production, create a `config.prod.toml` file :
    ```toml
    [server]
    host = "0.0.0.0"
@@ -72,20 +68,14 @@ Before using this template, ensure you have the following:
    cert_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/fullchain.pem"
    key_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/privkey.pem"
 
-   [database]
-   url = "postgresql://user:password@localhost/your_database_name" # will be replaced by env variable
-
    [google]
-   client_id = "your_client_id" # will be replaced by env variable
-   client_secret = "your_client_secret" # will be replaced by env variable
    redirect_url = "http://your_redirect_url"
    auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
    token_url = "https://oauth2.googleapis.com/token"
    ```
    
-   Ces fichiers doivent être ajoutés au `.gitignore` pour éviter d'exposer des informations sensibles.
 
-6. **Development Tools**
+6. **Development Tools and Production Setup**
    ```bash
    # For development with auto-reload
    cargo install cargo-watch
@@ -94,14 +84,30 @@ Before using this template, ensure you have the following:
    cargo install sqlx-cli
    ```
 
-Start the project with:
+   **Using ports < 1024 (for production)**
+   ```bash
+   # If using cargo run (development)
+   cargo build
+   sudo setcap 'cap_net_bind_service=+ep' target/debug/your-application
+
+   # If using release version
+   cargo build --release
+   sudo setcap 'cap_net_bind_service=+ep' target/release/your-application
+   ```
+
+Start the project:
 ```bash
+# Development mode
 cargo run
 # or with auto-reload
 cargo watch -x run
+
+# Production mode, put your environment variables and run the release version
+cargo run --release
 ```
 
-The server will start on `http://localhost:3000` by default.
+The server will start on `http://localhost:3000` by default in development mode, 
+or on port 443 (HTTPS) in production mode.
 
 ## Authentication Flow
 

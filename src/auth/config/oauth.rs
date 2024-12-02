@@ -3,8 +3,8 @@ use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, T
 use crate::{error::AppError, settings::AppConfig};
 
 pub fn oauth_client(config: &AppConfig) -> Result<BasicClient, AppError> {
-    let client_id = config.google.client_id.clone();
-    let client_secret = config.google.client_secret.clone();
+    let client_id = config.google_client_id.clone();
+    let client_secret = config.google_client_secret.clone();
     let redirect_url = config.google.redirect_url.clone();
     let auth_url = config.google.auth_url.clone();
     let token_url = config.google.token_url.clone();

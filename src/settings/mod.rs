@@ -12,15 +12,8 @@ pub struct SslConfig {
 }
 
 #[derive(serde::Deserialize, Clone)]
-pub struct DatabaseConfig {
-    pub url: String,
-}
-
-#[derive(serde::Deserialize, Clone)]
 pub struct GoogleConfig {
     pub redirect_url: String,
-    pub client_id: String,
-    pub client_secret: String,
     pub auth_url: String,
     pub token_url: String,
 }
@@ -30,7 +23,9 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub ssl: SslConfig,
     pub google: GoogleConfig,
-    pub database: DatabaseConfig,
+    pub database_url: String,
+    pub google_client_id: String,
+    pub google_client_secret: String,
 }
 
 #[derive(PartialEq, Clone)]
