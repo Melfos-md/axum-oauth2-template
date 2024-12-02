@@ -47,6 +47,10 @@ async fn main() {
         "prod" => Environment::Production,
         _ => Environment::Development,
     };
+    
+    if environment == Environment::Development {
+        dotenvy::dotenv().ok();
+    }
 
     let config = Config::builder()
         .add_source(File::with_name(&format!("config.{}.toml", environment)))
