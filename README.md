@@ -65,8 +65,8 @@ Before using this template, ensure you have the following:
 
    [ssl]
    enabled = true
-   cert_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/fullchain.pem"
-   key_path = "/etc/letsencrypt/live/sosplanning.r-mont.fr/privkey.pem"
+   cert_path = "/path/to/your/cert.pem"
+   key_path = "/path/to/your/key.pem"
 
    [google]
    redirect_url = "http://your_redirect_url"
